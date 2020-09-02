@@ -28,7 +28,8 @@ void getToken();
 double parser_prim(bool get);
 double parser_multDiv(bool get);
 double parser_plus_minus(bool get);
-
+void calc_error(const char *errorText);
+unsigned short g_NrOfErrors = 0;
 int main()
 {
 
@@ -42,8 +43,15 @@ int main()
             continue;
         cout << parser_plus_minus(false) << endl;
     }
-    cout << "End Of calculation \n";
+    cout << "End Of calculation \n"
+         << "Number of Errors: " << g_NrOfErrors;
+
     return 0;
+}
+void calc_error(const char *errorText)
+{
+    cerr << errorText << endl;
+    g_NrOfErrors++;
 }
 
 void getToken()
@@ -114,7 +122,7 @@ void getToken()
             break;
         }
 
-        currentToken = PRINT;
+        calc_error("except Primary expression");
         break;
     }
 }
@@ -144,7 +152,7 @@ double parser_prim(bool get)
     {
         left = parser_plus_minus(true);
         if (currentToken != RP)
-            cout << " ) erwartet!!" << endl;
+            calc_error(" ) erwartet!!");
         getToken();
         return left;
     }
@@ -160,10 +168,13 @@ double parser_multDiv(bool get)
         left_md *= parser_prim(true);
         break;
     case DIV:
-        left_md /= parser_prim(true);
-        break;
-    default:
-        break;
+        if (double divident = parser_prim(true))
+        {
+            left_md /= divident;
+            break;
+        }
+        calc_error("division durch Null");
+        return 0;
     }
     return left_md;
 }
